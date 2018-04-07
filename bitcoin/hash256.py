@@ -19,7 +19,7 @@ def demo_exclusive():
 	print(bin(b))
 	print(bin(a ^ b))
 
-demo_exclusive()
+# demo_exclusive()
 
 
 """
@@ -32,7 +32,7 @@ def demo_complement():
 	print(bin(a))
 	print(bin(~a))
 
-demo_complement()
+# demo_complement()
 
 
 """
@@ -48,28 +48,61 @@ def demo_and():
 	print(bin(a & b))
 
 
-demo_and()
+# demo_and()
 
 
 """
 right shift by n bits
-	- equal to multiply with 2^n
+	- equal to divice with 2^n
 """
 def demo_right_shift():
 	print('demo right shift')
 	a = 10
 	print(bin(a))
-	print(bin(a << 2))
-	print(a<<2)
+	print(bin(a >> 2))
+	print(a>>2)
 
-demo_right_shift()
+# demo_right_shift()
 
 
-"""
-right rotation by n bits
-	how to calculate rotation
-	https://www.youtube.com/watch?v=S2yXCBu3NdQ
-"""
+def _rotr(x, y):
+	# return ((x >> y) | (x << (32-y))) & 0xFFFFFFFF
+	# print(bin(((x >> y) | (x << (32-y)))))
+	print('{0:32b}'.format(x))
+	print('{0:32b}'.format(x>>y))
+	print('{0:32b}'.format(x<<(32-y)))
+	print('{0:32b}'.format(((x >> y) | (x << (32-y)))))
+	# print(bin(0xFFFFFFFF))
+	# print('{0:32b}'.format(0xFFFFFFFF))
+
+
+def demo_right_rotate_8bits_length(number, rotate_bits):
+
+
+	# this function demo how to do right rotate with bit length is 8
+	
+	# print original number in binary format
+	print('{0:8b}'.format(number))
+
+	# make second part of original at right position by shift left (8-rotate_bits)
+	after_left_shift = number << (8-rotate_bits)
+	print('{0:8b}'.format(after_left_shift))
+
+	# remove away first part of original number
+	after_left_shift = after_left_shift & 0XFF
+	print('{0:8b}'.format(after_left_shift))
+
+	# make first part of original number at right position by shift right rotate_bits
+	after_right_shift = number >> rotate_bits 
+	print('{0:8b}'.format(after_right_shift))
+
+	# do | operation to combine 2 result
+	combine = after_left_shift | after_right_shift
+	print('{0:8b}'.format(combine))
+
+demo_right_rotate_8bits_length(9,2)
+
+
 
 
 
