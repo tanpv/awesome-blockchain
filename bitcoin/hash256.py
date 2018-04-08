@@ -16,6 +16,7 @@ import struct
 import codecs
 import hashlib
 import sys
+import copy
 
 
 def demo_exclusive():
@@ -168,10 +169,10 @@ class sha256():
 		self._buffer = ''
 		self._counter = 0
 
-		if m is not None:
-			if type(m) is not str:
-				raise 'Message should be string'
-			self.update(m)
+		# if m is not None:
+		# 	if type(m) is not str:
+		# 		raise 'Message should be string'
+		self.update(m)
 
 	
 	def _hash256_one_block(self, one_block):
@@ -216,19 +217,54 @@ class sha256():
 
 	
 
-	def update(self,m):
-		pass
+	def update(self, m):
+			# if not m:
+			# 	return
+			# if type(m) is not str:
+			# 	raise 'Error'
+			
+			self._buffer += m
+			self._counter += len(m)
+			
+			while len(self._buffer) >= 64:
+				self._hash256_one_block(self._buffer[:64])
+				self._buffer = self._buffer[64:]
+
+	def digest(self):
+		mdi = self._counter & 0x3F
+		length = struct.pack('!Q', self._counter<<3)
+		
+		if mdi < 56:
+			padlen = 55-mdi
+		else:
+			padlen = 119-mdi
+		
+		r = self.copy()
+		a = b'\x80'.decode(errors="ignore")
+		b = '\x00'*padlen
+		c = b(length).decode(errors="ignore")
+
+		d = a+b+c
+		# c = b(b).decode(errors="ignore")
+		r.update(b'\x80'.encode('utf-8') + length)
+		return ''.join([struct.pack('!L', i) for i in r._h[:self._output_size]])
+
+	def hexdigest(self):
+		return self.digest().encode('hex')
+		
+	def copy(self):
+		return copy.deepcopy(self)
 
 
-one_block = b'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl'
-_buffer = one_block
 
-print(sha256()._hash256_one_block(one_block))
+print(sha256('abc').hexdigest())
+
+
 h = hashlib.sha256()
-h.update(b"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl")
+h.update(b"abc")
 print(h.hexdigest())
 
-print(sys.getsizeof(one_block))
+
 # print(len(one_block.encode('utf-8')))
 
 
