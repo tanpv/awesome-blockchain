@@ -16,9 +16,9 @@ block = {
         }
     ],
 
-    'proof': 324984774000,
-    'previous_hash': "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+    'proof': 0,
 
+    'previous_hash': "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
 }
 
 
@@ -27,9 +27,9 @@ def isvalidproof(proof):
     
     block_string = json.dumps(block)
 
-    hash_with_proof = hashlib.sha256(str(proof) + block_string).hexdigest()    
+    hash_with_proof = hashlib.sha256(str(proof).encode('utf-8') + block_string.encode('utf-8')).hexdigest()    
     
-    print hash_with_proof
+    print(hash_with_proof)
 
     # difficulty '0000' is easy
     # difficulty '00000' is extream hard
@@ -46,6 +46,4 @@ proof = 0
 while isvalidproof(proof):
     proof = proof + 1
 
-print proof
-
-
+print(proof)

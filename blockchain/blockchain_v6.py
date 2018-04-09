@@ -7,7 +7,6 @@
 	- understand blockchain consensus
 """
 
-
 import time
 import json
 import hashlib
@@ -30,12 +29,19 @@ class Block():
             - previous_hash : hash string of previous block
     """
 
-    def __init__(self, index, timestamp, transaction,proof, previous_hash):
+    def __init__(self,
+                 index, 
+                 timestamp, 
+                 transaction,
+                 proof, 
+                 previous_hash):
+
         self.index = index
         self.timestamp = timestamp
         self.transaction = transaction
-        self.proof = proof
         self.previous_hash = previous_hash
+        self.proof = proof
+    
 
 
 class BlockChain():

@@ -7,18 +7,22 @@ import time
 import json
 import hashlib
 
-
 class Block(object):
 	
 	"""
 		a block	contain following information
-			- index
-			- timestamp
+			- index : the order which block is added to chain
+			- timestamp : moment which block is added to chain
 			- data : this will be transaction in case of currency
 			- previous_hash : hash string of previous block
 	"""
 
-	def __init__(self, index, timestamp, data, previous_hash):
+	def __init__(self, 
+				index, 
+				timestamp, 
+				data, 
+				previous_hash):
+
 		self.index = index
 		self.timestamp = timestamp
 		self.data = data
@@ -31,7 +35,6 @@ class BlockChain():
 	"""
 		a block chain manage following information
 			- a chain of block
-			- it's current transaction
 	"""
 
 	def __init__(self):
@@ -51,7 +54,7 @@ class BlockChain():
 		block_string = json.dumps(block.__dict__)
 
 		# using hashlib to calculate sha256 of input json string
-		return hashlib.sha256(json.dumps(block_string)).hexdigest()
+		return hashlib.sha256(block_string.encode('utf-8')).hexdigest()
 
 	
 	def add_block_to_chain(self, block):
@@ -62,13 +65,12 @@ class BlockChain():
 		return self.chain[-1]
 
 
+# create a new chain
 new_chain = BlockChain()
 
+
+# add some blocks to chain
 block_num = 5
-
-# previous_hash = new_chain.hash_block(new_chain.get_last_block())
-# print previous_hash
-
 for index in range(1, block_num+1):
 	previous_hash = new_chain.hash_block(new_chain.get_last_block())
 	# print previous_hash
@@ -77,9 +79,11 @@ for index in range(1, block_num+1):
 	new_chain.add_block_to_chain(new_block)
 
 
+
+# read out the chain after added block
 for block in new_chain.chain:
-	print 'block'
-	print json.dumps(block.__dict__, indent=4, sort_keys=False)
-	print 'hash'
-	print new_chain.hash_block(block)
-	print '\n\n'
+	print('block')
+	print(json.dumps(block.__dict__, indent=4, sort_keys=False))
+	print('sha256 of block')
+	print(new_chain.hash_block(block))
+	print('\n\n')
