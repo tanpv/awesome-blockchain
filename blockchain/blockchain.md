@@ -2,7 +2,7 @@
 
 This tutorial intent to make clear about blockchain structure, and other important idea related to blockchain : proof of work, transaction, distributed client and consensus algorithm.
 
-Please download and install Anaconda as python coding environment for this course
+Please download and install Anaconda as python coding environment for this course. Please note to chose 3.6 version.
 
 https://www.anaconda.com/download/
 
@@ -158,17 +158,13 @@ Following result will show up from console log, this is valid chain due to block
 
 ### Proof of work, mining and mining difficulty
 
-
-
 #### Why need proof of work ?
 
 In blockchain like bitcoin, proof of work is essential on consensus algorithm which is algorithm to decide which transaction is valid and could be added to the chain.
 
-
-
 #### What is proof of work ?
 
-Let start with following simple block data which is present as a JSON object.
+Let start with following simple block data which is present as a python dictionary type.
 
 ```python
 block = {
@@ -183,17 +179,149 @@ block = {
             'recipient': "a77f5cdfa2934df3954a5c7c7da5df1f",
             'amount': 5,
         }
-    ],
-
-    'proof': 0,
-
+    ],	
+    
     'previous_hash': "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
 }
 ```
 
-Compare with block structure on blockchain session, we could see that have one more field called "proof".
+Let create hash for above block
 
-Let create 
+```python
+# normal sha256 calculation
+print(hashlib.sha256(json.dumps(block).encode('utf-8')).hexdigest())
+```
+
+We will get result is a long string like this
+
+```python
+f8b91672ff39ec64e294929dd1bbd7fbe7c21da6174c79e9819ffb0ef13aa08c
+```
+
+Now let setting up a problem like this, find a value (>= 0) for variable name `proof` which hash combination of block and `proof` will start with character '0'. Because we do not know which kind of input value for `proof` will create hash string start with character '0', so we do brute force for every value of `proof`.
+
+Let do the code to find out `proof`
+
+```python
+import hashlib
+import json
+
+block = {
+
+    'index': 1,
+
+    'timestamp': 1506057125.900785,
+
+    'transactions': [
+        {
+            'sender': "8527147fe1f5426f9dd545de4b27ee00",
+            'recipient': "a77f5cdfa2934df3954a5c7c7da5df1f",
+            'amount': 5,
+        }
+    ],
+
+    'previous_hash': "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+}
+
+
+def isvalidproof(proof):
+    
+    block_string = json.dumps(block)
+
+    hash_with_proof = hashlib.sha256(str(proof).encode('utf-8') + block_string.encode('utf-8')).hexdigest()    
+    
+    print(hash_with_proof)
+
+    # difficulty '0000' is easy
+    # difficulty '00000' is extream hard
+    if hash_with_proof[:1] == '0':
+    
+        return 0
+    
+    else:
+    
+        return 1
+
+proof = 0
+
+while isvalidproof(proof):
+    proof = proof + 1
+
+print(proof)
+```
+
+
+
+Running this code, we find out that hash string will start with 1 0 number '0xxx' with `proof` = 32. This value of `proof` variable is called `proof of work` just because of we already do some calculation work in order to find out right value for `proof` 
+
+Let's do another interesting thing, what if we increase the requirement like : find `proof` so the hash string start with 2 number 0 '00xxx'. Let change the code and try to run. This time we found `proof` = 40. Then if we require hash start with 3 number 0 '000xxx' we will found `proof` = 1898 (mean go to loop 1898 times).
+
+So it is harder to find `proof` when we increase the number of 0 which hash string need to start with. The number 0 which has string need to start with is called `difficulty` of `proof of work` algorithm.
+
+Please note that which only requirement of hash string start with 5 number 0 '00000xxx', it take my Dell laptop to run forever but not yet found right value for `proof` 
+
+
+
+#### Blockchain with proof of work
+
+
+
+Let put the idea about `proof of work` to blockchain. Because of `proof of work` blockchain like Bitcoin become really secure.
+
+One variable called `proof` is added to Block class.
+
+```python
+class Block(object):
+	
+	"""
+		a block	contain following information
+			- index
+			- timestamp
+			- data : this will be transaction in case of currency
+			- proof : proof of work
+			- previous_hash : hash string of previous block
+	"""
+
+	def __init__(self, index, timestamp, data,proof, previous_hash):
+		self.index = index
+		self.timestamp = timestamp
+		self.data = data
+		self.proof = proof
+		self.previous_hash = previous_hash
+```
+
+
+
+Now then add function call `search_proof_of_work`
+
+```python
+def search_proof_of_work(self,block):
+
+	difficulty = '0000'
+
+	# block string without proof
+	block_string = 	str(block.index) + \
+					str(block.timestamp) + \
+					str(block.data) + \
+					str(block.previous_hash)
+
+	proof = 0
+
+	while 1 :
+		block_string_with_proof = block_string + str(proof)
+		block_hash = hashlib.sha256(block_string_with_proof.encode('utf-8')).hexdigest()
+		if block_hash[:4] == difficulty:
+			break
+		proof = proof + 1
+
+	block.proof = proof
+
+	return block
+```
+
+ 
+
+Running the code and we have blockchain is printed with right value of proof.
 
 
 

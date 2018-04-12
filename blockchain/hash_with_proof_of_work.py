@@ -16,11 +16,8 @@ block = {
         }
     ],
 
-    'proof': 0,
-
     'previous_hash': "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
 }
-
 
 
 def isvalidproof(proof):
@@ -33,7 +30,7 @@ def isvalidproof(proof):
 
     # difficulty '0000' is easy
     # difficulty '00000' is extream hard
-    if hash_with_proof[:5] == '00000':
+    if hash_with_proof[:4] == '0000':
     
         return 0
     
