@@ -260,6 +260,8 @@ So it is harder to find `proof` when we increase the number of 0 which hash stri
 
 Please note that which only requirement of hash string start with 5 number 0 '00000xxx', it take my Dell laptop to run forever but not yet found right value for `proof` 
 
+The action of calculate hash string which solve above problem is call `mining` .
+
 
 
 #### Blockchain with proof of work
@@ -323,14 +325,147 @@ def search_proof_of_work(self,block):
 
 Running the code and we have blockchain is printed with right value of proof.
 
-
+![2018-04-12_22-03-24](C:\out\blockchain_code\blockchain\2018-04-12_22-03-24.png)
 
 
 
 ### Transaction and block creation
 
+The most important part of blockchain is it's data, in this course that will be transaction data like bitcoin.
+
+Let's adding one more variable to blockchain class called `current_transaction` , this variable will manage the transaction which happen.
+
+A transaction will contain following input : `sender` , `recipient` , `amount`  
+
+Now let's do the code
+
+```python
+def __init__(self):
+		# init a chain
+		self.chain = []
+         # init transaction list
+		self.current_transaction = []
+        
+def new_transaction(self, sender, recipient, amount):
+
+	"""
+		- append to transaction
+		- return the block which will added transaction to
+	"""
+	self.current_transaction.append({
+		'sender': sender,
+		'recipient' : recipient,
+		'amount' : amount,
+		})
+
+	return len(self.chain)
+```
+
+Let try to run the code and we will see transaction data inside blockchain.
+
+![2018-04-12_22-42-28](C:\out\blockchain_code\blockchain\2018-04-12_22-42-28.png)
+
+
+
 ### Blockchain as a service
+
+In real, blockchain is running on a distributed system which contain multiple node. In this session we will try to use flask and REST api to make each node become server which could serve request.
+
+```python
+from flask import Flask
+app = Flask(__name__)
+app.json_encoder = JSONEncoder
+ 
+
+# init new chain
+new_chain = BlockChain()
+
+@app.route("/mine", methods=['GET'])
+def mine():
+	return "start mine"
+
+@app.route('/transactions/new', methods=['POST'])
+def new_transaction():
+	return "start transaction"
+
+@app.route('/chain', methods=['GET'])
+def chain():
+	return "the chain"
+	
+if __name__ == "__main__":
+	app.run()
+
+```
+
+
 
 ### Transaction and mining service
 
+Now let's really building transaction and mining service.
+
+```python
+app = Flask(__name__)
+app.json_encoder = JSONEncoder
+ 
+
+# init new chain
+new_chain = BlockChain()
+
+
+@app.route('/transactions/new', methods=['POST'])
+def new_transaction():
+	values = request.get_json()
+
+	required = ['sender', 'recipient', 'amount']
+
+	# Create a new transaction
+	index = new_chain.new_transaction(values['sender'], values['recipient'], values['amount'])
+
+	response = {'message': 'transaction will be added to block {0}'.format(index)}
+
+	return jsonify(response)
+
+
+
+@app.route('/chain', methods=['GET'])
+def chain():
+
+	response = {
+		'chain': [b.__dict__ for b in new_chain.chain],
+		'length': len(new_chain.chain)
+	}
+
+	return jsonify(response), 200
+
+
+
+
+@app.route('/mine', methods=['GET'])
+def mine():
+
+	new_block = new_chain.add_block_to_chain()
+	
+	new_chain.new_transaction(sender='0', recipient='', amount=1,)
+	
+	response = {
+		'message': 'new block added',
+		'index': new_block.index,
+		'transaction': new_block.transaction,
+		'proof': new_block.proof,
+		'previous_hash': new_block.previous_hash,
+	}
+
+	return jsonify(response), 200
+
+
+if __name__ == "__main__":
+	app.run()
+
+```
+
+
+
 ### Consensus algorithm
+
+In the world of consensus between multiple node, the longest node win.
+

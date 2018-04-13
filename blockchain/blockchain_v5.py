@@ -164,9 +164,6 @@ def new_transaction():
 
 	required = ['sender', 'recipient', 'amount']
 
-	# if not all(k in values for k in required):
-	# 	return 'Missing values', 400
-
 	# Create a new transaction
 	index = new_chain.new_transaction(values['sender'], values['recipient'], values['amount'])
 
@@ -210,22 +207,3 @@ def mine():
 if __name__ == "__main__":
 	app.run()
 
-
-
-
-# # setting block number
-# block_num = 10
-
-
-# # do transaction and add block to chain
-# for index in range(1, block_num+1):
-# 	new_chain.new_transaction('abc','def', index)
-# 	new_chain.add_block_to_chain()
-
-
-# # print the chain
-# for block in new_chain.chain:
-# 	print json.dumps(block.__dict__, indent=4, sort_keys=False)
-# 	print new_chain.hash_block(block)
-# 	print'\n\n'
-# 	time.sleep(1)

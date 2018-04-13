@@ -12,7 +12,6 @@ import json
 import hashlib
 
 
-
 class Block(object):
 	
 	"""
@@ -65,7 +64,7 @@ class BlockChain():
 						str(block.proof)
 
 		# using hashlib to calculate sha256 of input json string
-		return hashlib.sha256(block_string).hexdigest()
+		return hashlib.sha256(block_string.encode('utf-8')).hexdigest()
 
 	
 	def add_block_to_chain(self):
@@ -105,7 +104,7 @@ class BlockChain():
 
 		while 1 :
 			block_string_with_proof = block_string + str(proof)
-			block_hash = hashlib.sha256(block_string_with_proof).hexdigest()
+			block_hash = hashlib.sha256(block_string_with_proof.encode('utf-8')).hexdigest()
 			if block_hash[:4] == difficulty:
 				break
 			proof = proof + 1
@@ -148,7 +147,8 @@ for index in range(1, block_num+1):
 
 # print the chain
 for block in new_chain.chain:
-	print json.dumps(block.__dict__, indent=4, sort_keys=False)
-	print new_chain.hash_block(block)
-	print'\n\n'
+	print(json.dumps(block.__dict__, indent=4, sort_keys=False))
+	print(new_chain.hash_block(block))
+	print('\n\n')
 	time.sleep(1)
+

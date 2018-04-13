@@ -15,7 +15,7 @@ from flask import Flask, jsonify, request
 from flask import Flask
 from flask.json import JSONEncoder
 from uuid import uuid4
-import urlparse
+from urlparse import urlparse
 
 
 class Block():
@@ -135,8 +135,8 @@ class BlockChain():
     def valide_chain(self, chain):
 
         """
-            - check if 2 block is beside, hash of left block should equal 
-            to preous hash property of right block.
+            - check if 2 block is continous, hash of below block should equal 
+            to hash property of above block.
             
             - check if proof of work found for each block is correct. 
 
@@ -289,6 +289,43 @@ def mine():
 
     return jsonify(response), 200
 
+
+@app.route('/nodes/register', methods=['POST'])
+def register_node():
+    values = request.get_json()
+
+    nodes = values.get('nodes')
+
+
+    for node in nodes:
+        blockchain.register_node(node)
+
+    response = {
+        'message' : 'New nodes have been added',
+        'total_nodes' : list(blockchain.nodes),
+    }
+
+    return jsonify(response), 201
+
+
+@app.route('/nodes/resolve', methods=['GET'])
+def consensus():
+    replace = blockchain.resolve_conflicts()
+
+    if replaced:
+        response = {
+            'message': 'our chain was replaced',
+            'new_chain': blockchain.chain
+        }
+    else:
+        response = {
+            'message': 'our chain is authoritative',
+            'chain': blockchain.chain
+
+        }
+
+    return jsonify(response), 200
+    
 
 
 
