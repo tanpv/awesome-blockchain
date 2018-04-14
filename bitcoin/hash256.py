@@ -12,6 +12,7 @@ exclusive operation
 	- output is 1 if one if input is 1
 """
 
+
 import struct
 import codecs
 import hashlib
@@ -229,8 +230,10 @@ class sha256():
 			while len(self._buffer) >= 64:
 				self._hash256_one_block(self._buffer[:64])
 				self._buffer = self._buffer[64:]
+				
 
 	def digest(self):
+
 		mdi = self._counter & 0x3F
 		length = struct.pack('!Q', self._counter<<3)
 		
@@ -239,14 +242,7 @@ class sha256():
 		else:
 			padlen = 119-mdi
 		
-		r = self.copy()
-		a = b'\x80'.decode(errors="ignore")
-		b = '\x00'*padlen
-		c = b(length).decode(errors="ignore")
-
-		d = a+b+c
-		# c = b(b).decode(errors="ignore")
-		r.update(b'\x80'.encode('utf-8') + length)
+		r.update(b'\x80' +)
 		return ''.join([struct.pack('!L', i) for i in r._h[:self._output_size]])
 
 	def hexdigest(self):
@@ -265,9 +261,8 @@ h.update(b"abc")
 print(h.hexdigest())
 
 
+
 # print(len(one_block.encode('utf-8')))
-
-
 # print('{0:32b}'.format(14))
 # print('{0:32b}'.format(sha256()._rotr(14,15)))
 # print([0]*64)

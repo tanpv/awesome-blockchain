@@ -19,6 +19,7 @@ from uuid import uuid4
 from urllib.parse import urlparse
 from collections import namedtuple
 
+
 class Block():
     
     """
@@ -180,13 +181,11 @@ class BlockChain():
 
         print('true')
         return True
-
-
     
 
     def register_node(self, address):
         """
-            parse 
+            parse get ip and port
         """
         url = urlparse(address)
         if url.netloc:
@@ -284,12 +283,14 @@ class BlockChain():
 app = Flask(__name__)
 app.json_encoder = JSONEncoder
 
+# each node 
 node_identifier = str(uuid4()).replace('-','')
 
 # init new chain
 new_chain = BlockChain()
 
 
+# end point to do new transactions
 @app.route('/transactions/new', methods=['POST'])
 def new_transaction():
     values = request.get_json()
@@ -307,7 +308,7 @@ def new_transaction():
     return jsonify(response)
 
 
-
+# end point to get blockchain data
 @app.route('/chain', methods=['GET'])
 def chain():
 
@@ -319,15 +320,14 @@ def chain():
     return jsonify(response), 200
 
 
+# end point to mine new coin
 @app.route('/mine', methods=['GET'])
 def mine():
 
     # sender = 0 mean this coin is created from mining process
-    new_chain.new_transaction(sender='0', recipient='', amount=1,)
+    new_chain.new_transaction(sender='0', recipient=node_identifier , amount=1,)
     # add block to chain
     new_block = new_chain.add_block_to_chain()
-    
-    
     
     response = {
         'message': 'new block added',
@@ -340,6 +340,7 @@ def mine():
     return jsonify(response), 200
 
 
+# end point to register new node 
 @app.route('/nodes/register', methods=['POST'])
 def register_node():
     values = request.get_json()
@@ -360,7 +361,7 @@ def register_node():
     return jsonify(response), 201
 
 
-
+# end point to resolve conflic between chains
 @app.route('/nodes/resolve', methods=['GET'])
 def consensus():
 
@@ -374,7 +375,7 @@ def consensus():
         }
 
     else:
-        
+
         response = {
             'message': 'our chain is authoritative',
             'chain': [json.dumps(b.__dict__) for b in new_chain.chain],

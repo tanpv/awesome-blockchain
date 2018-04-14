@@ -7,6 +7,7 @@ __license__ = 'MIT'
 import copy
 import struct
 import binascii
+import hashlib
 
 F32 = 0xFFFFFFFF
 
@@ -26,6 +27,7 @@ _k = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
       0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
       0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
       0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2]
+
 
 _h = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
       0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]
@@ -55,6 +57,16 @@ def _ch(x, y, z):
     return (x & y) ^ ((~x) & z)
 
 
+
+# print(bin(0x3F))
+# print((0x3F))
+# print(bin(0x6a09e667))
+# print(0x6a09e667)
+# print(hashlib.sha256(b'abc').digest())
+# print(hashlib.sha256(b'abc').digest_size())
+
+
+
 class SHA256:
     _output_size = 8
     blocksize = 1
@@ -70,7 +82,10 @@ class SHA256:
         self.update(m)
 
     def _compress(self, c):
+        
         w = [0] * 64
+
+        # 16 * 4 * 8 =  512 bits
         w[0:16] = struct.unpack('!16L', c)
         print(w)
 
@@ -101,7 +116,9 @@ class SHA256:
         for i, (x, y) in enumerate(zip(self._h, [a, b, c, d, e, f, g, h])):
             self._h[i] = (x + y) & F32
 
+
     def update(self, m):
+        
         if not m:
             return
 
@@ -110,42 +127,59 @@ class SHA256:
 
         for i in range(0, len(m) // 64):
             self._compress(m[64 * i:64 * (i + 1)])
+        
         self._cache = m[-(len(m) % 64):]
 
+
     def digest(self):
+
         r = copy.deepcopy(self)
+
+
         r.update(_pad(self._counter))
+
+
         data = [struct.pack('!L', i) for i in r._h[:self._output_size]]
+
+        
         return b''.join(data)
 
+
     def hexdigest(self):
+        
         return binascii.hexlify(self.digest()).decode('ascii')
 
 
-if __name__ == '__main__':
-    def check(msg, sig):
-        m = SHA256()
-        m.update(msg.encode('ascii'))
-        print(m.hexdigest())
-        print(m.hexdigest() == sig)
 
-    tests = {
-        # "":
-        #     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-        # "a":
-        #     'ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb',
-        # "abc":
-        #     'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad',
-        # "message digest":
-        #     'f7846f55cf23e14eebeab5b4e1550cad5b509e3348fbc4efa3a1413d393cb650',
-        "abcdefghijklmnopqrstuvwxyz":
-            '71c480df93d6ae2f1efad1447c66c9525e316218cf51fc8d9ed832f2daf18b73',
-        # "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789":
-        #     'db4bfcbd4da0cd85a60c3c37d3fbd8805c77f15fc6b1fdfe614ee0a7c8fdb4c0',
-        # ("12345678901234567890123456789012345678901234567890123456789"
-        #  "012345678901234567890"):
-        #     'f371bc4a311f2b009eef952dd83ca80e2b60026c8e935592d0f9c308453c813e'
-    }
 
-    for inp, out in tests.items():
-        check(inp, out)
+
+
+
+# if __name__ == '__main__':
+#     def check(msg, sig):
+#         m = SHA256()
+#         m.update(msg.encode('ascii'))
+#         print(m.hexdigest())
+#         print(m.hexdigest() == sig)
+
+#     tests = {
+#         # "":
+#         #     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+#         # "a":
+#         #     'ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb',
+#         # "abc":
+#         #     'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad',
+#         # "message digest":
+#         #     'f7846f55cf23e14eebeab5b4e1550cad5b509e3348fbc4efa3a1413d393cb650',
+#         "abcdefghijklmnopqrstuvwxyz":
+#             '71c480df93d6ae2f1efad1447c66c9525e316218cf51fc8d9ed832f2daf18b73',
+#         # "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789":
+#         #     'db4bfcbd4da0cd85a60c3c37d3fbd8805c77f15fc6b1fdfe614ee0a7c8fdb4c0',
+#         # ("12345678901234567890123456789012345678901234567890123456789"
+#         #  "012345678901234567890"):
+#         #     'f371bc4a311f2b009eef952dd83ca80e2b60026c8e935592d0f9c308453c813e'
+#     }
+
+#     for inp, out in tests.items():
+#         check(inp, out)
+
