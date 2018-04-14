@@ -270,8 +270,6 @@ def chain():
     return jsonify(response), 200
 
 
-
-
 @app.route('/mine', methods=['GET'])
 def mine():
 
