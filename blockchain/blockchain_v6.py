@@ -7,6 +7,7 @@
 	- understand blockchain consensus
 """
 
+
 import time
 import json
 import hashlib
@@ -15,8 +16,8 @@ from flask import Flask, jsonify, request
 from flask import Flask
 from flask.json import JSONEncoder
 from uuid import uuid4
-from urlparse import urlparse
-
+from urllib.parse import urlparse
+from collections import namedtuple
 
 class Block():
     
@@ -53,9 +54,11 @@ class BlockChain():
     """
 
     def __init__(self):
-        # init a chain
+        # manage blockchain, store blocks
         self.chain = []
+        # manage transaction, store transaction
         self.current_transaction = []
+        # manage node, store node
         self.nodes = set()
 
 
@@ -69,6 +72,7 @@ class BlockChain():
         self.chain.append(genesis_block)
 
 
+
     def hash_block(self, block):
         
         # using json to convert from object to json string
@@ -79,7 +83,8 @@ class BlockChain():
                         str(block.proof)
 
         # using hashlib to calculate sha256 of input json string
-        return hashlib.sha256(block_string).hexdigest()
+        return hashlib.sha256(block_string.encode('utf-8')).hexdigest()
+
 
     
     def add_block_to_chain(self):
@@ -99,6 +104,7 @@ class BlockChain():
         self.current_transaction = []
 
         return new_block
+
 
 
     def get_last_block(self):
@@ -121,7 +127,7 @@ class BlockChain():
 
         while 1 :
             block_string_with_proof = block_string + str(proof)
-            block_hash = hashlib.sha256(block_string_with_proof).hexdigest()
+            block_hash = hashlib.sha256(block_string_with_proof.encode('utf-8')).hexdigest()
             if block_hash[:4] == difficulty:
                 break
             proof = proof + 1
@@ -129,6 +135,7 @@ class BlockChain():
         block.proof = proof
 
         return block
+
 
 
 
@@ -143,38 +150,56 @@ class BlockChain():
         """
 
         index = 1
-        left_block = chain[0]
+        below_block = chain[0]
 
-        while current_index < len(chain):
+        while index < len(chain):
             
-            right_block = chain[index]
+            above_block = chain[index]
             
-            # check if block chain together
-            if right_block.previous_hash != self.hash_block(left_block):
+            print(json.dumps(below_block.__dict__))
+            print(self.hash_block(below_block))
+            print(json.dumps(above_block.__dict__))
+
+            # check if block chain together and hash is calculate correctly
+            if above_block.previous_hash != self.hash_block(below_block):
+                # print(index)
+                # print(above_block.previous_hash)
+                # print(self.hash_block(below_block))
+                print('fail because diff hash')
                 return False
 
-            # check if pow is correct
-            left_hash = self.hash_block(left_block)
-            if left_hash[:4] != '0000':
+            # check if pow is correct on each hash
+            below_block_hash = self.hash_block(below_block)
+            if below_block_hash[:4] != '0000':
+                print('fail because proof of work')
                 return False
 
             # check on next block
-            left_block = right_block
+            below_block = above_block
             index = index + 1
 
+        print('true')
         return True
 
+
+    
+
     def register_node(self, address):
+        """
+            parse 
+        """
         url = urlparse(address)
         if url.netloc:
-            self.nodes.add(url)
+            self.nodes.add(url.netloc)
 
 
     def resolve_conflicts(self):
+        
         """
             consensus algorithm, resolves conflicts by replacing
             local chain with longest chain
         """
+
         neighbours = self.nodes
         new_chain = None
 
@@ -183,15 +208,39 @@ class BlockChain():
 
         # check for all lable
         for node in neighbours:
-            response = requests.get('http://{node}/chain'.format(node))
+            response = requests.get('http://{0}/chain'.format(node))
 
             if response.status_code == 200:
+                
                 length = response.json()['length']
                 chain = response.json()['chain']
+                print(length)
+                print(max_length)
+                print(chain)
 
-                if length > max_length and self.valide_chain(chain):
+                neighbour_chain = []
+
+                for block in chain:
+                    print(block)
+                    block_dict = json.loads(str(block))
+                    new_block = Block(block_dict['index'],
+                                    block_dict['timestamp'],
+                                    block_dict['transaction'],
+                                    block_dict['proof'],
+                                    block_dict['previous_hash'])
+                    neighbour_chain.append(new_block)
+
+                    # def __init__(self,
+                    #                  index, 
+                    #                  timestamp, 
+                    #                  transaction,
+                    #                  proof, 
+                    #                  previous_hash):
+
+
+                if length > max_length and self.valide_chain(neighbour_chain):
                     max_length = length
-                    new_chain = chain
+                    new_chain = neighbour_chain
 
         # Replace our chain with discovered new chain
         if new_chain:
@@ -263,7 +312,7 @@ def new_transaction():
 def chain():
 
     response = {
-        'chain': [b.__dict__ for b in new_chain.chain],
+        'chain': [json.dumps(b.__dict__) for b in new_chain.chain],
         'length': len(new_chain.chain)
     }
 
@@ -273,9 +322,12 @@ def chain():
 @app.route('/mine', methods=['GET'])
 def mine():
 
+    # sender = 0 mean this coin is created from mining process
+    new_chain.new_transaction(sender='0', recipient='', amount=1,)
+    # add block to chain
     new_block = new_chain.add_block_to_chain()
     
-    new_chain.new_transaction(sender='0', recipient='', amount=1,)
+    
     
     response = {
         'message': 'new block added',
@@ -292,41 +344,62 @@ def mine():
 def register_node():
     values = request.get_json()
 
+    print(values)
+
     nodes = values.get('nodes')
 
 
     for node in nodes:
-        blockchain.register_node(node)
+        new_chain.register_node(node)
 
     response = {
         'message' : 'New nodes have been added',
-        'total_nodes' : list(blockchain.nodes),
+        'total_nodes' : list(new_chain.nodes),
     }
 
     return jsonify(response), 201
 
 
+
 @app.route('/nodes/resolve', methods=['GET'])
 def consensus():
-    replace = blockchain.resolve_conflicts()
+
+    replaced = new_chain.resolve_conflicts()
 
     if replaced:
+
         response = {
             'message': 'our chain was replaced',
-            'new_chain': blockchain.chain
+            'new_chain': [json.dumps(b.__dict__) for b in new_chain.chain]
         }
+
     else:
+        
         response = {
             'message': 'our chain is authoritative',
-            'chain': blockchain.chain
-
+            'chain': [json.dumps(b.__dict__) for b in new_chain.chain],
         }
 
     return jsonify(response), 200
-    
 
+
+@app.route('/valide', methods=['GET'])
+def valide():
+    result = new_chain.valide_chain(new_chain.chain)
+    response = {
+        'result':result,
+    }
+    return jsonify(response), 200
 
 
 if __name__ == "__main__":
-    app.run()
+
+    from argparse import ArgumentParser
+
+    parser = ArgumentParser()
+    parser.add_argument('-p','--port',default=5000,type=int,help='port to listen on')
+    args = parser.parse_args()
+    port = args.port
+
+    app.run(host='0.0.0.0', port=port)
 
