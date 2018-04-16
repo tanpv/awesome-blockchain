@@ -8,6 +8,7 @@ import copy
 import struct
 import binascii
 import hashlib
+import sys
 
 F32 = 0xFFFFFFFF
 
@@ -33,15 +34,39 @@ _h = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
       0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]
 
 
+# do pading so that the final block will be 512 bit or 1024 bit
 def _pad(msglen):
-    mdi = msglen & 0x3F
-    length = struct.pack('!Q', msglen << 3)
 
+    # get mod of division for 64 : & with 0b111111
+    mdi = msglen & 0x3F
+
+    # Q is 8 bytes ---> length = 64 bits
+    # msg is in byte so len should be multiply with 8
+    length = struct.pack('!Q', msglen << 3)
+    print('length in bit',int.from_bytes(length, byteorder = 'big'))
+    print(bin(int.from_bytes(length, byteorder = 'big')))
+    print(length)
+
+    
+    # total length = mdi * 8 + padlen * 8 + 8 + 64 = 512
     if mdi < 56:
+
         padlen = 55 - mdi
+
     else:
+
         padlen = 119 - mdi
 
+    print('mdi=' + str(mdi))
+    print('mdi*8=' +str(mdi*8))
+    print(b'length' + length)
+    print('padlen' + str(padlen))
+    print('padlen*8=' + str(padlen*8))
+    print(b'\x80' + (b'\x00' * padlen) + length)
+    print(binascii.hexlify(b'\x80' + (b'\x00' * padlen) + length))
+    print('totoal length = ' + str(mdi*8 + 8 + padlen*8 + 64))
+    print(bin(int.from_bytes( b'\x80' + (b'\x00' * padlen) + length, byteorder=sys.byteorder)))
+    print(b'\x80' + (b'\x00' * padlen) + length)
     return b'\x80' + (b'\x00' * padlen) + length
 
 
@@ -66,8 +91,37 @@ def _ch(x, y, z):
 # print(hashlib.sha256(b'abc').digest_size())
 
 
+# h = hashlib.sha256()
+# h.update(b'abc')
+# print(h.digest())
+# print(h.digest_size)
+# print(binascii.hexlify(h.digest()))
+
+# L is 4 byte 
+# print(b''.join([struct.pack('!L', i) for i in _h[:8]]))
+
+
+# for i in _h[:8]:
+#     print(struct.pack('!L',i))
+
+
+# print(struct.pack('!L',0xa))
+# print(binascii.hexlify(struct.pack('!L',0xa)))
+# print(binascii.hexlify(b''.join([struct.pack('!L', i) for i in _h[:8]])))
+
+
+# print(1234 & 0x3F)
+# print(1234 & 0b111111)
+# print(1234 % 64)
+# print(0x3F)
+# print(bin(1234))
+# print(bin(0x3F))
+# # print(b'\x80'.decode())
+
+
 
 class SHA256:
+
     _output_size = 8
     blocksize = 1
     block_size = 64
@@ -86,17 +140,21 @@ class SHA256:
         w = [0] * 64
 
         # 16 * 4 * 8 =  512 bits
+        # unpack to 16 block, each block is 8 * 4 bits
+        # each w is 32 bits
         w[0:16] = struct.unpack('!16L', c)
-        print(w)
+        # print(w)
 
         for i in range(16, 64):
             s0 = _rotr(w[i-15], 7) ^ _rotr(w[i-15], 18) ^ (w[i-15] >> 3)
             s1 = _rotr(w[i-2], 17) ^ _rotr(w[i-2], 19) ^ (w[i-2] >> 10)
             w[i] = (w[i-16] + s0 + w[i-7] + s1) & F32
 
-        print(w)
+        # print(w)
+        
         
         a, b, c, d, e, f, g, h = self._h
+
 
         for i in range(64):
             s0 = _rotr(a, 2) ^ _rotr(a, 13) ^ _rotr(a, 22)
@@ -125,6 +183,10 @@ class SHA256:
         self._counter += len(m)
         m = self._cache + m
 
+        print('from here')
+        print(bin(int.from_bytes(m, byteorder='little')))
+        print(0b0110100001100111011001100110010101100100011000110110001001100001)
+
         for i in range(0, len(m) // 64):
             self._compress(m[64 * i:64 * (i + 1)])
         
@@ -135,18 +197,16 @@ class SHA256:
 
         r = copy.deepcopy(self)
 
-
         r.update(_pad(self._counter))
-
-
+        
+        # format the output so it should be exactly 8 * 4 * 8 = 256 bits = 64 hex c
         data = [struct.pack('!L', i) for i in r._h[:self._output_size]]
-
         
         return b''.join(data)
 
 
     def hexdigest(self):
-        
+        # from byte string to hex
         return binascii.hexlify(self.digest()).decode('ascii')
 
 
@@ -155,31 +215,35 @@ class SHA256:
 
 
 
-# if __name__ == '__main__':
-#     def check(msg, sig):
-#         m = SHA256()
-#         m.update(msg.encode('ascii'))
-#         print(m.hexdigest())
-#         print(m.hexdigest() == sig)
+if __name__ == '__main__':
+    def check(msg, sig):
+        m = SHA256()
+        m.update(msg.encode('ascii'))
+        print(m.hexdigest())
+        print(m.hexdigest() == sig)
 
-#     tests = {
-#         # "":
-#         #     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-#         # "a":
-#         #     'ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb',
-#         # "abc":
-#         #     'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad',
-#         # "message digest":
-#         #     'f7846f55cf23e14eebeab5b4e1550cad5b509e3348fbc4efa3a1413d393cb650',
-#         "abcdefghijklmnopqrstuvwxyz":
-#             '71c480df93d6ae2f1efad1447c66c9525e316218cf51fc8d9ed832f2daf18b73',
-#         # "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789":
-#         #     'db4bfcbd4da0cd85a60c3c37d3fbd8805c77f15fc6b1fdfe614ee0a7c8fdb4c0',
-#         # ("12345678901234567890123456789012345678901234567890123456789"
-#         #  "012345678901234567890"):
-#         #     'f371bc4a311f2b009eef952dd83ca80e2b60026c8e935592d0f9c308453c813e'
-#     }
+    tests = {
+        # "":
+        #     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        # "a":
+        #     'ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb',
+        # "abc":
+        #     'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad',
+        # "message digest":
+        #     'f7846f55cf23e14eebeab5b4e1550cad5b509e3348fbc4efa3a1413d393cb650',
+        "abcdefghijklmnopqrstuvwxyz":
+            '71c480df93d6ae2f1efad1447c66c9525e316218cf51fc8d9ed832f2daf18b73',
+        # "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789":
+        #     'db4bfcbd4da0cd85a60c3c37d3fbd8805c77f15fc6b1fdfe614ee0a7c8fdb4c0',
+        # ("12345678901234567890123456789012345678901234567890123456789"
+        #  "012345678901234567890"):
+        #     'f371bc4a311f2b009eef952dd83ca80e2b60026c8e935592d0f9c308453c813e'
+    }
 
-#     for inp, out in tests.items():
-#         check(inp, out)
+    for inp, out in tests.items():
+        check(inp, out)
+
+
+    print(bin(24))
+    print(sys.getsizeof(b'\x00'))
 
