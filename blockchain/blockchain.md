@@ -8,7 +8,7 @@ https://www.anaconda.com/download/
 
 
 
-### Hashing
+### Hash function
 
 A hash function is a function that takes input and create output with following property:
 
@@ -468,4 +468,6 @@ if __name__ == "__main__":
 ### Consensus algorithm
 
 In the world of consensus between multiple node, the longest node win.
+
+
 

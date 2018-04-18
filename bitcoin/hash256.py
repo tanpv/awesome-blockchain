@@ -215,20 +215,21 @@ class sha256():
 
 		# return hash
 		self._h = [(x+y) & 0xFFFFFFFF for x,y in zip(self._h,[a,b,c,d,e,f,g,h])]
-	
 
+	
 	def update(self, m):
 
-		# store message and message length
+		# store message and message length to buffer and counter
 		self._buffer += m
 		self._counter += len(m)
 		
+
 		# each time get 64*8 bits from buffer
 		while len(self._buffer) >= 64:
 			self._hash256_one_block(self._buffer[:64])
-			# get first 64 bit inside buffer
+			# get first 64 bits at left
 			print(self._buffer[:64])
-			# move buffer windows continue
+			# move buffer windows to right and cut out the 64 bits left
 			self._buffer = self._buffer[64:]
 
 		# remain need to do padding to create 1 or 2 block 512 bits
@@ -237,23 +238,33 @@ class sha256():
 		# get remain buffer length
 		print(len(self._buffer))
 
-		# calculation
-		# remain_buffer*8 + separate_8_bits_with_value_equal_1 + padlen_in_byte*8 + 64_bits_represent_message_length = 512
-		# need to findout paddlen_in_byte
-		# padlen*8 + remain_buffer*8 =  512 - 8 - 64
-		# padlen*8 + remain_buffer*8 = 440
-		# after_pad_block_length = len(self._buffer)*8 + padlen*8 + 72
+	
 
+	# calculation
+	# remain_buffer*8 + separate_8_bits_with_value_equal_1 + padlen_in_byte*8 + 64_bits_represent_message_length = 512
+	# need to findout paddlen_in_byte
+	# padlen*8 + remain_buffer*8 =  512 - 8 - 64
+	# padlen*8 + remain_buffer*8 = 440
+	# after_pad_block_length = len(self._buffer)*8 + padlen*8 + 72
 
+	def _pad(self):
+
+		# decide to pad 1 or 2 blocks
 		if len(self._buffer)*8 + 8 + 64 > 512:
+			
 			after_pad_block_length = 1024
+
 		else:
+
 			after_pad_block_length = 512
 		
+		# calculate pad lengh in byte unit
 		padlen = int((after_pad_block_length - 72 - len(self._buffer)*8)/8) 
 
+		# express bit length in struct
 		message_length_in_bytes = struct.pack('!Q', self._counter << 3)
 
+		# building pad block
 		after_pad_block = self._buffer + b'\x80' + b'\x00'*padlen + message_length_in_bytes
 
 		import sys
@@ -268,6 +279,7 @@ class sha256():
 		data = [struct.pack('!L', i) for i in self._h[:self._output_size]]
 		data1 = b''.join(data)
 		print(binascii.hexlify(data1).decode('ascii'))
+
 
 
 

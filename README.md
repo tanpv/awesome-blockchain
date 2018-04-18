@@ -2,7 +2,7 @@ My code collection in blockchain technology.
 
 # Blockchain
 
-* full code in python to demo working of blockchain.
+* full course with code in python to demo working of blockchain.
 
 
 
@@ -35,3 +35,11 @@ https://github.com/hyperledger/fabric-samples
 # Data structure and algorithm
 
 # Distributed Computing
+
+# C++
+
+# Javascript
+
+# Python
+
+

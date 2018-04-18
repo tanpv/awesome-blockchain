@@ -84,6 +84,6 @@ for index in range(1, block_num+1):
 for block in new_chain.chain:
 	print('block')
 	print(json.dumps(block.__dict__, indent=4, sort_keys=False))
-	print('sha256 of block')
+	print('sha256 of this block')
 	print(new_chain.hash_block(block))
 	print('\n\n')
