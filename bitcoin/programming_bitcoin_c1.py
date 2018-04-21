@@ -1,3 +1,6 @@
+from unittest import TestCase
+import unittest
+
 """
 	Define a finite field element
 """
@@ -37,11 +40,60 @@ class FieldElement:
 		return self.__class__(num, self.prime)
 
 
-	def __pow__(self, other):
-		if self.prime != other.prim:
-			raise RuntimeError('can not pow two number in different fields')
-		num = (self.num ** other.num) % self.prime
+	# def __pow__(self, n):
+	# 	num = (self.num ** n) % self.prime
+	# 	return self.__class__(num, self.prime)
+
+	# better version of __pow__ function
+	# use fermat's little theorem
+	# decrease n to n%prime
+	def __pow__(self, n):
+		num = pow(self.num, n % self.prime, self.prime)
 		return self.__class__(num, self.prime)
+
+	# convert div to pow
+	def __truediv__(self, other):
+		if self.prime != other.prime:
+			raise RuntimeError('can not divide two nummber in different fields')
+
+		# use fermat's little theorem
+		num = (self.num * pow(other.num, self.prime-2, self.prime))%self.prime
+		return self.__class__(num, self.prime)
+
+
+# write testing for FieldElement
+# test driven method
+class FieldElementTest(TestCase):
+
+	def test_add(self):
+		a = FieldElement(2,31)
+		b = FieldElement(15,31)
+		self.assertEqual(a+b,FieldElement(17,31))
+		a = FieldElement(19,31)
+		b = FieldElement(20,31)
+		self.assertEqual(a+b,FieldElement(8,31))
+
+	def test_sub(self):
+		a = FieldElement(29,31)
+		b = FieldElement(4,31)
+		self.assertEqual(a-b,FieldElement(25,31))
+		a = FieldElement(15,31)
+		b = FieldElement(30,31)
+		self.assertEqual(a-b,FieldElement(16,31))
+
+	def test_mul(self):
+		a = FieldElement(24, 31)
+		b = FieldElement(19, 31)
+		self.assertEqual(a*b,FieldElement(22,31))
+
+	def test_pow(self):
+		a = FieldElement(17,31)
+		self.assertEqual(a**3, FieldElement(15,31))
+
+	def test_div(self):
+		a = FieldElement(3,31)
+		b = FieldElement(24,31)
+		self.assertEqual(a/b, FieldElement(4,31))
 
 
 
@@ -61,31 +113,15 @@ class Point:
 		# same curve and same cordinate
 		return self.a == other.a and self.b == other.b and self.x == other.x and self.y == other.y
 
+	def __ne__(self, other):
+		if self.a != other.a or self.b != other.b:
+			raise RuntimeError('could not compare 2 points which not in same curve')
+
+		return self.x != other.x or self.y != other.y
 
 
-
-
-
-
-
-
-
-
-a = FieldElement(3, 13)
-b = FieldElement(12, 13)
-c = FieldElement(10, 13)
-
-print(a*b==c)
-
-l = [1, 3, 7, 13, 18]
-
-for k in range(1000):
-	print([item%19 for item in l])
-
-
-
-
-
+if __name__ == '__main__':
+	unittest.main()
 
 
 
