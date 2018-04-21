@@ -331,7 +331,7 @@ Running the code and we have blockchain is printed with right value of proof.
 
 ### Transaction and block creation
 
-The most important part of blockchain is it's data, in this course that will be transaction data like bitcoin.
+The most important part of blockchain is it's data, in this course that will be transaction data between sender and recipient like bitcoin or other crypto currency.
 
 Let's adding one more variable to blockchain class called `current_transaction` , this variable will manage the transaction which happen.
 
