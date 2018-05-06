@@ -13,18 +13,9 @@ My journey learning blockchain programming.
 
 # Ethereum
 
-# Cryptography
-
 # Algorithm
 
-# P2P
-
-# C++
-
-# Javascript
-
-# Python
-
-# Go
-
-
+- linked list
+- hasttable
+- binary search tree
+- graph
