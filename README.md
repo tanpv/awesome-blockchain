@@ -1,4 +1,6 @@
-My journey learning blockchain programming.
+Learning blockchain programming roadmap and material.
+
+
 
 # Blockchain
 
@@ -16,6 +18,11 @@ My journey learning blockchain programming.
 # Algorithm
 
 - linked list
+
 - hasttable
+
 - binary search tree
+
 - graph
+
+  
