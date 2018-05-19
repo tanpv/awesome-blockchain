@@ -110,6 +110,7 @@ class HashTable(object):
 
 
 	def get(self,key):
+		
 		key_hashed = hash(key, self.capacity)
 		
 		node = self.slots[key_hashed]
@@ -119,6 +120,7 @@ class HashTable(object):
 				return node.value
 			else:
 				node = node.next
+
 
 class HashTableTest(TestCase):
 	def __init__(self, arg):
@@ -132,6 +134,7 @@ ht.set('hello', 5)
 print(ht.get('hello'))
 ht.set('abc',10)
 print(ht.get('abc'))
+
 
 
 
