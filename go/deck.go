@@ -30,6 +30,6 @@ func deal(d deck, handSize int) (deck, deck) {
 	return d[:handSize], d[handSize:]
 }
 
-func saveToFile() {
+func (d deck) toString() string {
 
 }
