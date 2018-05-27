@@ -22,6 +22,7 @@ class S256Field(FieldElement):
 	def __repr__(self):
 		return self.hex()
 
+
 # elliptic curve parameter for bitcoin
 A = 0
 B = 7
@@ -49,6 +50,7 @@ class S256Point(Point):
 			return 'Point({0},{1})'.format(self.x, self.y)
 
 
+
 	# new way to doing scalar multiplication with faster result
 	def __rmul__(self, coefficient):
 		
@@ -68,4 +70,36 @@ class S256Point(Point):
 			coef >>= 1
 
 		return result
+
+
+	# verify if signiture for message z is valid for a publish key
+	def verify(self, z, sig):
+		# 1/s = pow(s, N-2, N)
+		s_inv = pow(sig.s, N-2, N)
+		# u = z/s
+		u = z * s_inv % N
+		# v = r / s
+		v = sig.r * s_inv % N
+		# u*G + v*P
+		total = u*G + v*self
+		return total.x.num == sig.r
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
